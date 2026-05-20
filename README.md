@@ -13,15 +13,59 @@ qcom_dsp_deinit()
 
 ## Requirements
 
-List requirements to run the project, how to install them, instructions to use docker container, etc...
+ ### System Requirements
+- Linux (Debian/Ubuntu)
+- Qualcomm platform with DSP/NPU support
+### Dependencies
+This project depends on FastRPC for CPU ↔ DSP communication.
+
+Install required package:
+
+```bash
+sudo apt update
+sudo apt install libfastrpc-dev
+```
 
 ## Installation Instructions
 
-How to install the software itself.
+```bash
+git clone https://github.com/qualcomm/libqcnpuperf.git
+cd libqcnpuperf
+```
+
+## Build Instructions
+This project uses CMake.
+### 1. Create a build directory
+```bash
+mkdir -p build
+cd build
+```
+### 2. Configure
+```bash
+cmake ..
+```
+### 3. Build
+```bash
+make -j$(nproc)
+```
+### 4. (Optional) Install
+```bash
+sudo make install
+```
+
+## Runtime Notes
+Ensure FastRPC is available:
+```bash
+ls /dev/fastrpc*
+```
 
 ## Usage
 
-Describe how to use the project.
+```c
+qcom_dsp_init();
+qcom_dsp_get_prof_data(...);
+qcom_dsp_deinit();
+```
 
 ## Development
 
