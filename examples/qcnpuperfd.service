@@ -1,0 +1,17 @@
+[Unit]
+Description=Qualcomm NPU performance stats daemon
+Documentation=https://github.com/qualcomm/libqcnpuperf
+After=local-fs.target
+
+[Service]
+ExecStart=/usr/local/bin/qcnpuperfd
+Restart=on-failure
+RestartSec=5s
+
+# Log to journald
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=qcnpuperfd
+
+[Install]
+WantedBy=multi-user.target
