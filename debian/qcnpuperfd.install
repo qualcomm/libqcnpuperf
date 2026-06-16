@@ -1,0 +1,4 @@
+usr/bin/qcnpuperfd
+usr/lib/systemd/system/qcnpuperfd.service
+usr/lib/*/libqcnpuperf.so.1
+usr/lib/*/libqcnpuperf.so.1.0

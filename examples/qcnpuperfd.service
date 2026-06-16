@@ -4,7 +4,7 @@ Documentation=https://github.com/qualcomm/libqcnpuperf
 After=local-fs.target
 
 [Service]
-ExecStart=/usr/local/bin/qcnpuperfd
+ExecStart=/usr/bin/qcnpuperfd
 Restart=on-failure
 RestartSec=5s
 

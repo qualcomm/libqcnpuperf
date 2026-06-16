@@ -1,0 +1,3 @@
+usr/lib/*/libqcnpuperf.so
+usr/lib/*/pkgconfig/qcnpuperf.pc
+usr/include/qcom_dsp.h

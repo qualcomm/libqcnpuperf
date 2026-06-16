@@ -1,0 +1,28 @@
+Source: qcnpuperf
+Section: libs
+Priority: optional
+Maintainer: samfreund-qc <freund@qti.qualcomm.com>
+Build-Depends: debhelper-compat (= 13), cmake, qcom-fastrpc-dev, qcom-dspservices-headers-dev
+Standards-Version: 4.6.2
+Rules-Requires-Root: no
+
+Package: libqcnpuperf1
+Architecture: arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Qualcomm NPU performance metrics library
+ Runtime shared library providing NPU/DSP performance metrics
+ on Qualcomm Linux platforms via FastRPC.
+
+Package: libqcnpuperf-dev
+Architecture: arm64
+Depends: libqcnpuperf1 (= ${binary:Version}), ${misc:Depends}, qcom-fastrpc-dev
+Description: Qualcomm NPU performance metrics library -- development files
+ Headers and pkg-config file for building against libqcnpuperf.
+
+Package: qcnpuperfd
+Architecture: arm64
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Qualcomm NPU performance stats daemon
+ Polls DSP_NPU0 once per second and writes NPU performance metrics
+ to /tmp/qcnpuperf_stats using atomic rename. Designed to run
+ under systemd on Qualcomm aarch64 Linux platforms.
