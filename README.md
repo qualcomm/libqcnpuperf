@@ -19,12 +19,18 @@ qcom_dsp_deinit()
 ### Dependencies
 This project depends on FastRPC for CPU ↔ DSP communication.
 
-Install required package:
+Install required packages (Debian):
 
 ```bash
 sudo apt update
 sudo apt install libfastrpc-dev
 ```
+
+Install required packages (Ubuntu):
+
+```bash
+sudo apt update
+sudo apt install qcom-fastrpc-dev qcom-dspservices-headers-dev
 
 ## Installation Instructions
 
