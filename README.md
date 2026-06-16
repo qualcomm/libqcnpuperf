@@ -31,6 +31,7 @@ Install required packages (Ubuntu):
 ```bash
 sudo apt update
 sudo apt install qcom-fastrpc-dev qcom-dspservices-headers-dev
+```
 
 ## Installation Instructions
 
@@ -61,7 +62,12 @@ sudo make install
 ### Building without the ncurses sample
 If you don't want the sample binary:
 ```bash
-cmake -DQCNPU_PERF_BUILD_TUI=OFF ..
+cmake -DQCNPU_PERF_BUILD_CLI=OFF ..
+```
+
+### Building without the daemon
+```bash
+cmake -DQCNPU_PERF_BUILD_DAEMON=OFF ..
 ```
 
 ## Runtime Notes
@@ -77,6 +83,39 @@ qcom_dsp_init();
 qcom_dsp_get_prof_data(...);
 qcom_dsp_deinit();
 ```
+
+## qcnpuperfd — Stats Daemon
+
+`qcnpuperfd` is a systemd-native daemon that polls NPU metrics once per second and
+writes them to a file, updating it atomically so readers always see a consistent snapshot.
+
+### Output format
+
+Plain text, one metric per line. Default output path: `/tmp/qcnpuperf_stats`.
+
+```
+q6_utilization=<float>   # effective Q6 clock vs max Q6 clock (%)
+q6_clock_khz=<uint>      # average Q6 clock frequency in KHz
+hvx_utilization=<float>  # HVX utilization vs max Q6 clock (%)
+hmx_utilization=<float>  # HMX (NPU matrix engine) utilization vs max Q6 clock (%)
+```
+
+### Running directly
+
+```bash
+qcnpuperfd                   # writes to /tmp/qcnpuperf_stats
+qcnpuperfd /run/npu/stats    # custom output path
+```
+
+### Running as a systemd service
+
+```bash
+sudo systemctl enable qcnpuperfd
+sudo systemctl start qcnpuperfd
+journalctl -u qcnpuperfd -f  # follow logs
+```
+
+The service restarts automatically on failure (`Restart=on-failure`, `RestartSec=5s`).
 
 ## Development
 
