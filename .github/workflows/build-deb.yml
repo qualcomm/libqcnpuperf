@@ -1,0 +1,40 @@
+name: Build Debian packages
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-deb:
+    name: Build .deb packages (arm64)
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install build dependencies
+        run: |
+          sudo add-apt-repository -y ppa:ubuntu-qcom-iot/qcom-ppa
+          sudo apt-get update
+          sudo apt-get install -y build-essential debhelper cmake qcom-fastrpc-dev qcom-dspservices-headers-dev
+
+      - name: Build Debian packages
+        run: dpkg-buildpackage -us -uc -b
+
+      - name: Collect .deb artifacts
+        run: |
+          mkdir debs
+          mv ../*.deb debs/
+          mv ../*.ddeb debs/ 2>/dev/null || true
+
+      - name: Upload .deb artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: qcnpuperf-debs-${{ github.sha }}
+          path: debs/
+          if-no-files-found: error
