@@ -26,11 +26,11 @@ jobs:
       - name: Build Debian packages
         run: dpkg-buildpackage -us -uc -b
 
-      - name: Collect .deb artifacts
+      - name: Collect artifacts
         run: |
-          mkdir debs
+          mkdir debs ddebs
           mv ../*.deb debs/
-          mv ../*.ddeb debs/ 2>/dev/null || true
+          mv ../*.ddeb ddebs/ 2>/dev/null || true
 
       - name: Upload .deb artifacts
         uses: actions/upload-artifact@v7
@@ -38,3 +38,10 @@ jobs:
           name: qcnpuperf-debs-${{ github.sha }}
           path: debs/
           if-no-files-found: error
+
+      - name: Upload .ddeb artifacts
+        uses: actions/upload-artifact@v7
+        with:
+          name: qcnpuperf-ddebs-${{ github.sha }}
+          path: ddebs/
+          if-no-files-found: ignore
