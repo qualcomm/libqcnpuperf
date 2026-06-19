@@ -91,7 +91,7 @@ writes them to a file, updating it atomically so readers always see a consistent
 
 ### Output format
 
-Plain text, one metric per line. Default output path: `/tmp/qcnpuperf_stats`.
+Plain text, one metric per line. Default output path: `/tmp/qcnpuperf_metrics`.
 
 ```
 q6_utilization=<float>   # effective Q6 clock vs max Q6 clock (%)
@@ -103,7 +103,7 @@ hmx_utilization=<float>  # HMX (NPU matrix engine) utilization vs max Q6 clock (
 ### Running directly
 
 ```bash
-qcnpuperfd                   # writes to /tmp/qcnpuperf_stats
+qcnpuperfd                   # writes to /tmp/qcnpuperf_metrics
 qcnpuperfd /run/npu/stats    # custom output path
 ```
 

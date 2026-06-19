@@ -37,7 +37,7 @@
  * Usage:
  *   qcnpuperfd [output_path]
  *
- * output_path defaults to /tmp/qcnpuperf_stats if not supplied.
+ * output_path defaults to /tmp/qcnpuperf_metrics if not supplied.
  *
  * Designed to run under systemd (no self-daemonization). Errors are written to
  * stderr and captured by journald.
@@ -60,7 +60,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define DEFAULT_OUTPUT_PATH "/tmp/qcnpuperf_stats"
+#define DEFAULT_OUTPUT_PATH "/tmp/qcnpuperf_metrics"
 
 /* Set to 0 by the signal handler to break the poll loop. */
 static volatile sig_atomic_t running = 1;

@@ -22,7 +22,7 @@ Description: Qualcomm NPU performance metrics library -- development files
 Package: qcnpuperfd
 Architecture: arm64
 Depends: libqcnpuperf1 (= ${binary:Version}), ${shlibs:Depends}, ${misc:Depends}
-Description: Qualcomm NPU performance stats daemon
+Description: Qualcomm NPU performance metrics daemon
  Polls DSP_NPU0 once per second and writes NPU performance metrics
- to /tmp/qcnpuperf_stats using atomic rename. Designed to run
+ to /tmp/qcnpuperf_metrics using atomic rename. Designed to run
  under systemd on Qualcomm aarch64 Linux platforms.
