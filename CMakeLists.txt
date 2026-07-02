@@ -28,6 +28,7 @@ include(GNUInstallDirs)
 
 add_library(qcnpuperf SHARED
     src/qcom_dsp.c
+    src/qcom_dsp_arch.c
     src/dspquery_stub.c
 )
 

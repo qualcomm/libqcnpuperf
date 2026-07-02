@@ -46,6 +46,7 @@ float        qcom_dsp_prof_get_q6_utilization(const struct sysmon_query_prof_dat
 unsigned int qcom_dsp_prof_get_q6_clock(const struct sysmon_query_prof_data *data);
 float        qcom_dsp_prof_get_hvx_utilization(const struct sysmon_query_prof_data *data);
 float        qcom_dsp_prof_get_hmx_utilization(const struct sysmon_query_prof_data *data);
+unsigned int qcom_dsp_prof_get_q6_arch_version(struct qcom_dsp_ctx *ctx);
 
 void qcom_dsp_close(struct qcom_dsp_ctx *ctx);
 

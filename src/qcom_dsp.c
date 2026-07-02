@@ -85,6 +85,7 @@ struct qcom_dsp_ctx *qcom_dsp_open(enum DspDomainId domain_id)
     if (!ctx->prof_data)
         goto err_deinit;
 
+    qcom_dsp_set_arch_version(ctx);
     memset(ctx->prof_data, 0, sizeof(struct sysmon_query_prof_data));
     return ctx;
 
@@ -108,6 +109,11 @@ struct sysmon_query_prof_data *qcom_dsp_get_prof_data(struct qcom_dsp_ctx *ctx,
                                        sizeof(struct sysmon_query_prof_data),
                                        no_metrics, 0);
     return ret == 0 ? ctx->prof_data : NULL;
+}
+
+unsigned int qcom_dsp_prof_get_q6_arch_version(struct qcom_dsp_ctx *ctx)
+{
+	return ctx ? ctx->arch_ver : 0;
 }
 
 float qcom_dsp_prof_get_q6_utilization(const struct sysmon_query_prof_data *data)

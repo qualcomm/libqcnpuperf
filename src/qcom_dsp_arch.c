@@ -27,42 +27,52 @@
     IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef QCOM_DSP_PRIV_H_
-#define QCOM_DSP_PRIV_H_
-
-#include "qcom_dsp_types.h"
-#include <stdint.h>
-
 /*
- * Full definition of the opaque context.  Not installed — callers only
- * see the forward declaration in qcom_dsp.h.
- *
- * remote_handle64 is typedef uint64_t in remote.h; stored as uint64_t here
- * to keep the type explicit.
+ * Kept in a separate translation unit from qcom_dsp.c so that
+ * <misc/fastrpc.h> (kernel UAPI) can be included directly without
+ * conflicting with the fastrpc_map_flags definition in remote.h, which
+ * qcom_dsp.h pulls in transitively.
  */
-struct sysmon_query_prof_data {
-    float        q6_utilization;   /* avg effective q6 clock / max q6 clock (%) */
-    unsigned int q6_clock;         /* avg q6 clock (KHz) */
-    float        reserved0;
-    float        hvx_utilization;  /* avg HVX utilization / max q6 clock (%) */
-    float        hmx_utilization;  /* avg HMX utilization / max q6 clock (%) */
-    float        reserved1;
-    float        reserved2;
-    float        reserved3;
-    float        reserved4;
-    float        reserved5;
-    float        reserved6;
-    float        reserved7;
-    float        reserved8;
-    float        reserved9;
-};
 
-struct qcom_dsp_ctx {
-    enum DspDomainId              domain_id;
-    uint64_t                      h;         /* remote_handle64 */
-    struct sysmon_query_prof_data *prof_data;
-    unsigned int                  arch_ver;  /* cached; 0 = not yet queried */
-};
+#include "qcom_dsp_priv.h"
 
-enum DspReturnCode qcom_dsp_set_arch_version(struct qcom_dsp_ctx *ctx);
-#endif /* QCOM_DSP_PRIV_H_ */
+#include <misc/fastrpc.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+
+/* ARCH_VER is the 7th entry (0-indexed) of enum remote_dsp_attributes in
+ * remote.h.  Defined here as a plain constant to avoid including remote.h
+ * in this translation unit. */
+#define ARCH_VER 6
+
+enum DspReturnCode qcom_dsp_set_arch_version(struct qcom_dsp_ctx *ctx)
+{
+    const char *dev;
+
+    if (!ctx)
+        return RETURN_CODE_DSP_LIB_FAIL;
+
+    switch (ctx->domain_id) {
+    case DSP_ADSP: dev = "/dev/fastrpc-adsp"; break;
+    case DSP_NPU0: dev = "/dev/fastrpc-cdsp"; break;
+    default:       return RETURN_CODE_DSP_LIB_FAIL;
+    }
+
+    int fd = open(dev, O_RDWR);
+    if (fd < 0)
+        return RETURN_CODE_DSP_LIB_FAIL;
+
+    struct fastrpc_ioctl_capability cap = {
+        .attribute_id = ARCH_VER,
+    };
+
+    enum DspReturnCode ret = RETURN_CODE_DSP_LIB_FAIL;
+    if (ioctl(fd, FASTRPC_IOCTL_GET_DSP_INFO, &cap) == 0) {
+        ctx->arch_ver = cap.capability & 0xFF;
+        ret = RETURN_CODE_DSP_LIB_SUCCESS;
+    }
+
+    close(fd);
+    return ret;
+}
