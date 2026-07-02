@@ -118,5 +118,6 @@ install(FILES
 
 install(FILES
     inc/qcom_dsp.h
+    inc/qcom_dsp_types.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )

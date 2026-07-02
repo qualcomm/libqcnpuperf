@@ -27,45 +27,38 @@
     IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/**
- * @file dsp_lib.h
- * @brief DSP library public API — types, return codes, and function declarations
- * @author Himanshu Keshri (hkeshri@qti.qualcomm.com)
+#ifndef QCOM_DSP_TYPES_H_
+#define QCOM_DSP_TYPES_H_
+
+/*
+ * Minimal types shared between qcom_dsp.h and translation units that use
+ * the kernel UAPI directly (e.g. qcom_dsp_arch.c).  Kept separate so that
+ * code needing <misc/fastrpc.h> can include this header without pulling in
+ * remote.h, which redefines enum fastrpc_map_flags and conflicts with the
+ * kernel header.
+ *
+ * Values match ADSP_DOMAIN_ID / CDSP_DOMAIN_ID from remote.h.
  */
-
-#ifndef QCOM_DSP_H_
-#define QCOM_DSP_H_
-
-#include "qcom_dsp_types.h"
-#include "remote.h"
-#include "rpcmem.h"
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-
-struct sysmon_query_prof_data {
-    float q6_utilization;    // avg effective q6 clock with respect to max q6 clock. (%)
-    unsigned int q6_clock;   // avg q6 clock. (KHz)
-    float reserved0;         // Reserved field
-    float hvx_utilization;   // avg HVX utilization with respect to max q6 clock. (%)
-    float hmx_utilization;   // avg HMX utilization with respect to max q6 clock. (%)
-    float reserved1;         // Reserved field
-    float reserved2;         // Reserved field
-    float reserved3;         // Reserved field
-    float reserved4;         // Reserved field
-    float reserved5;         // Reserved field
-    float reserved6;         // Reserved field
-    float reserved7;         // Reserved field
-    float reserved8;         // Reserved field
-    float reserved9;         // Reserved field
+enum DspDomainId {
+    DSP_ADSP = 0,
+    DSP_NPU0 = 3,
 };
 
-struct qcom_dsp_ctx *qcom_dsp_open(enum DspDomainId domain_id);
+/* Opaque session context returned by qcom_dsp_open(). */
+struct qcom_dsp_ctx;
 
-struct sysmon_query_prof_data *qcom_dsp_get_prof_data(struct qcom_dsp_ctx *ctx, int *no_metrics);
+/* Forward declaration so qcom_dsp_priv.h can hold a pointer without
+ * pulling in qcom_dsp.h (which pulls in remote.h). */
+struct sysmon_query_prof_data;
 
-void qcom_dsp_close(struct qcom_dsp_ctx *ctx);
+enum DspReturnCode {
+    RETURN_CODE_DSP_LIB_SUCCESS = 0,
+    RETURN_CODE_DSP_LIB_FAIL = 1,
+    RETURN_CODE_DSP_SYSMON_QUERY_OPEN_FAILED,
+    RETURN_CODE_DSP_SYSMON_QUERY_INIT_FAILED,
+    RETURN_CODE_DSP_SYSMON_QUERY_RPC_MEM_ALLOC_FAILED,
+    RETURN_CODE_DSP_SYSMON_QUERY_GET_PROF_DATA_FAILED,
+    RETURN_CODE_DSP_SYSMON_QUERY_DEINIT_FAILED,
+};
 
-#endif /* QCOM_DSP_H_ */
+#endif /* QCOM_DSP_TYPES_H_ */

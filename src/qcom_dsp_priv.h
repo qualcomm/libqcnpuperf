@@ -27,45 +27,23 @@
     IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/**
- * @file dsp_lib.h
- * @brief DSP library public API — types, return codes, and function declarations
- * @author Himanshu Keshri (hkeshri@qti.qualcomm.com)
- */
-
-#ifndef QCOM_DSP_H_
-#define QCOM_DSP_H_
+#ifndef QCOM_DSP_PRIV_H_
+#define QCOM_DSP_PRIV_H_
 
 #include "qcom_dsp_types.h"
-#include "remote.h"
-#include "rpcmem.h"
+#include <stdint.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
-#include <string.h>
-
-struct sysmon_query_prof_data {
-    float q6_utilization;    // avg effective q6 clock with respect to max q6 clock. (%)
-    unsigned int q6_clock;   // avg q6 clock. (KHz)
-    float reserved0;         // Reserved field
-    float hvx_utilization;   // avg HVX utilization with respect to max q6 clock. (%)
-    float hmx_utilization;   // avg HMX utilization with respect to max q6 clock. (%)
-    float reserved1;         // Reserved field
-    float reserved2;         // Reserved field
-    float reserved3;         // Reserved field
-    float reserved4;         // Reserved field
-    float reserved5;         // Reserved field
-    float reserved6;         // Reserved field
-    float reserved7;         // Reserved field
-    float reserved8;         // Reserved field
-    float reserved9;         // Reserved field
+/*
+ * Full definition of the opaque context.  Not installed — callers only
+ * see the forward declaration in qcom_dsp.h.
+ *
+ * remote_handle64 is typedef uint64_t in remote.h; stored as uint64_t here
+ * to keep the type explicit.
+ */
+struct qcom_dsp_ctx {
+    enum DspDomainId            domain_id;
+    uint64_t                    h;         /* remote_handle64 */
+    struct sysmon_query_prof_data *prof_data;
 };
 
-struct qcom_dsp_ctx *qcom_dsp_open(enum DspDomainId domain_id);
-
-struct sysmon_query_prof_data *qcom_dsp_get_prof_data(struct qcom_dsp_ctx *ctx, int *no_metrics);
-
-void qcom_dsp_close(struct qcom_dsp_ctx *ctx);
-
-#endif /* QCOM_DSP_H_ */
+#endif /* QCOM_DSP_PRIV_H_ */

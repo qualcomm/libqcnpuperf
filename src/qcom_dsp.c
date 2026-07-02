@@ -34,14 +34,14 @@
  */
 
 #include "qcom_dsp.h"
+#include "qcom_dsp_priv.h"
 #include "dspquery_stub.h"
 
-void get_full_uri_info(const char* uri, char* full_uri, int size, enum DspDomainId domain_id);
+#include <stdlib.h>
 
-static remote_handle64 h[DSP_MAX]                                         = {0};
-static struct sysmon_query_prof_data* sysmon_query_prof_data_ptr[DSP_MAX] = {0};
-
-void get_full_uri_info(const char* uri, char* full_uri, int size, enum DspDomainId domain_id) {
+static void get_full_uri_info(const char *uri, char *full_uri, int size,
+                              enum DspDomainId domain_id)
+{
     memset(full_uri, 0, (size_t)size);
     strlcpy(full_uri, uri, (size_t)size);
     remote_handle64 fd;
@@ -57,81 +57,68 @@ void get_full_uri_info(const char* uri, char* full_uri, int size, enum DspDomain
     }
 }
 
-enum DspReturnCode qcom_dsp_init(enum DspDomainId domain_id) {
-    enum DspReturnCode return_code = RETURN_CODE_DSP_LIB_FAIL;
-    int sysmon_query_return_code      = -1;
-    unsigned int npu_id               = 0;
-    char full_uri[256]                = {0};
+struct qcom_dsp_ctx *qcom_dsp_open(enum DspDomainId domain_id)
+{
+    char full_uri[256] = {0};
+    remote_handle64 h;
 
-    if (domain_id == CDSP_DOMAIN_ID) {
-        npu_id = 0;
-    }
+    struct qcom_dsp_ctx *ctx = calloc(1, sizeof(*ctx));
+    if (!ctx)
+        return NULL;
+
+    ctx->domain_id = domain_id;
 
     get_full_uri_info(sysmonquery_URI, full_uri, sizeof(full_uri), domain_id);
-    sysmon_query_return_code = sysmonquery_open(full_uri, &h[domain_id]);
-    if (sysmon_query_return_code != 0) {
-        return_code = RETURN_CODE_DSP_SYSMON_QUERY_OPEN_FAILED;
-    } else {
-        sysmon_query_return_code = sysmonquery_init(h[domain_id], npu_id);
-        if (sysmon_query_return_code != 0) {
-            return_code = RETURN_CODE_DSP_SYSMON_QUERY_INIT_FAILED;
-        } else {
-            sysmon_query_prof_data_ptr[domain_id] =
-                (struct sysmon_query_prof_data*)rpcmem_alloc(RPCMEM_DEFAULT_HEAP, (RPCMEM_DEFAULT_FLAGS | RPCMEM_HEAP_NONCOHERENT), sizeof(struct sysmon_query_prof_data));
-            if (sysmon_query_prof_data_ptr[domain_id] == NULL) {
-                return_code = RETURN_CODE_DSP_SYSMON_QUERY_RPC_MEM_ALLOC_FAILED;
-            } else {
-                memset(sysmon_query_prof_data_ptr[domain_id], 0, sizeof(struct sysmon_query_prof_data));
-                return_code = RETURN_CODE_DSP_LIB_SUCCESS;
-            }
-        }
-    }
+    if (sysmonquery_open(full_uri, &h) != 0)
+        goto err_free;
+    ctx->h = h;
 
-    if (return_code != RETURN_CODE_DSP_LIB_SUCCESS) {
-        qcom_dsp_deinit(domain_id);
-    }
-    return return_code;
+    if (sysmonquery_init(h, 0) != 0)
+        goto err_close;
+
+    ctx->prof_data = rpcmem_alloc(RPCMEM_DEFAULT_HEAP,
+                                  RPCMEM_DEFAULT_FLAGS | RPCMEM_HEAP_NONCOHERENT,
+                                  sizeof(struct sysmon_query_prof_data));
+    if (!ctx->prof_data)
+        goto err_deinit;
+
+    memset(ctx->prof_data, 0, sizeof(struct sysmon_query_prof_data));
+    return ctx;
+
+err_deinit:
+    sysmonquery_deinit(h, 0);
+err_close:
+    sysmonquery_close(h);
+err_free:
+    free(ctx);
+    return NULL;
 }
 
-struct sysmon_query_prof_data* qcom_dsp_get_prof_data(enum DspDomainId domain_id, int* no_metrics) {
-    unsigned int npu_id                       = 0;
-    struct sysmon_query_prof_data* result_ptr = NULL;
-    if (no_metrics == NULL) {
-        result_ptr = NULL;
-    } else {
-        if (domain_id == CDSP_DOMAIN_ID) {
-            npu_id = 0;
-        }
-        int result = sysmonquery_get_profdata(h[domain_id], (unsigned char*)sysmon_query_prof_data_ptr[domain_id], sizeof(struct sysmon_query_prof_data), no_metrics, npu_id);
-        if (result == 0) {
-            result_ptr = sysmon_query_prof_data_ptr[domain_id];
-        } else {
-            result_ptr = NULL;
-        }
-    }
-    return result_ptr;
+struct sysmon_query_prof_data *qcom_dsp_get_prof_data(struct qcom_dsp_ctx *ctx,
+                                                      int *no_metrics)
+{
+    if (!ctx || !no_metrics)
+        return NULL;
+
+    int ret = sysmonquery_get_profdata((remote_handle64)ctx->h,
+                                       (unsigned char *)ctx->prof_data,
+                                       sizeof(struct sysmon_query_prof_data),
+                                       no_metrics, 0);
+    return ret == 0 ? ctx->prof_data : NULL;
 }
 
-enum DspReturnCode qcom_dsp_deinit(enum DspDomainId domain_id) {
-    enum DspReturnCode return_code = RETURN_CODE_DSP_LIB_FAIL;
-    unsigned int npu_id               = 0;
-    int sysmon_query_return_code      = -1;
-    if (domain_id == CDSP_DOMAIN_ID) {
-        npu_id = 0;
-    }
+void qcom_dsp_close(struct qcom_dsp_ctx *ctx)
+{
+    if (!ctx)
+        return;
 
-    sysmon_query_return_code = sysmonquery_deinit(h[domain_id], npu_id);
-    if (sysmon_query_return_code != 0) {
-        return_code = RETURN_CODE_DSP_SYSMON_QUERY_DEINIT_FAILED;
-    } else {
-        return_code = RETURN_CODE_DSP_LIB_SUCCESS;
-    }
-    if (sysmon_query_prof_data_ptr[domain_id] != NULL) {
-        rpcmem_free(sysmon_query_prof_data_ptr[domain_id]);
-    }
+    sysmonquery_deinit((remote_handle64)ctx->h, 0);
 
-    if (h[domain_id] != 0) {
-        sysmonquery_close(h[domain_id]);
-    }
-    return return_code;
+    if (ctx->prof_data)
+        rpcmem_free(ctx->prof_data);
+
+    if (ctx->h)
+        sysmonquery_close((remote_handle64)ctx->h);
+
+    free(ctx);
 }
