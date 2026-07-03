@@ -28,9 +28,25 @@
 */
 
 /**
- * @file dsp_lib.h
- * @brief DSP library public API — types, return codes, and function declarations
+ * @file qcom_dsp.h
+ * @brief Qualcomm DSP performance library — public API
  * @author Himanshu Keshri (hkeshri@qti.qualcomm.com)
+ * @author Srinivas Kandagatla (srinivas.kandagatla@oss.qualcomm.com)
+ *
+ * Typical usage:
+ * @code
+ *   struct qcom_dsp_ctx *ctx = qcom_dsp_open(DSP_NPU0);
+ *   if (!ctx) { ... handle error ... }
+ *
+ *   int n;
+ *   struct sysmon_query_prof_data *data = qcom_dsp_get_prof_data(ctx, &n);
+ *   if (data && n > 0) {
+ *       float util = qcom_dsp_prof_get_q6_utilization(data);
+ *       unsigned int clk = qcom_dsp_prof_get_q6_clock(data);
+ *   }
+ *
+ *   qcom_dsp_close(ctx);
+ * @endcode
  */
 
 #ifndef QCOM_DSP_H_
@@ -38,16 +54,81 @@
 
 #include "qcom_dsp_types.h"
 
+/**
+ * @brief Open a session to the specified DSP domain.
+ *
+ * Establishes a FastRPC connection to the sysmon query interface on the
+ * requested domain and allocates shared memory for profiling data.
+ * The Hexagon architecture version is queried and cached at this point.
+ *
+ * @param domain_id  DSP domain to connect to (e.g. DSP_NPU0 for CDSP).
+ * @return Opaque context pointer on success, NULL on failure.
+ *         Must be released with qcom_dsp_close().
+ */
 struct qcom_dsp_ctx *qcom_dsp_open(enum DspDomainId domain_id);
 
+/**
+ * @brief Query the DSP for a fresh set of profiling metrics.
+ *
+ * Performs a synchronous FastRPC call to populate the internal profiling
+ * buffer.  The returned pointer is valid until the next call to this
+ * function or until qcom_dsp_close() is called.
+ *
+ * @param ctx         Context obtained from qcom_dsp_open().
+ * @param no_metrics  Set to the number of valid metric slots on success.
+ * @return Pointer to the profiling data on success, NULL on failure.
+ *         Do not free the returned pointer.
+ */
 struct sysmon_query_prof_data *qcom_dsp_get_prof_data(struct qcom_dsp_ctx *ctx, int *no_metrics);
 
-float        qcom_dsp_prof_get_q6_utilization(const struct sysmon_query_prof_data *data);
+/**
+ * @brief Return the average effective Q6 utilisation as a percentage.
+ * @param data  Profiling snapshot from qcom_dsp_get_prof_data(). May be NULL.
+ * @return Utilisation in % [0.0, 100.0], or 0.0 if @p data is NULL.
+ */
+float qcom_dsp_prof_get_q6_utilization(const struct sysmon_query_prof_data *data);
+
+/**
+ * @brief Return the average Q6 clock frequency.
+ * @param data  Profiling snapshot from qcom_dsp_get_prof_data(). May be NULL.
+ * @return Clock frequency in KHz, or 0 if @p data is NULL.
+ */
 unsigned int qcom_dsp_prof_get_q6_clock(const struct sysmon_query_prof_data *data);
-float        qcom_dsp_prof_get_hvx_utilization(const struct sysmon_query_prof_data *data);
-float        qcom_dsp_prof_get_hmx_utilization(const struct sysmon_query_prof_data *data);
+
+/**
+ * @brief Return the average HVX utilisation as a percentage.
+ * @param data  Profiling snapshot from qcom_dsp_get_prof_data(). May be NULL.
+ * @return Utilisation in % [0.0, 100.0], or 0.0 if @p data is NULL.
+ */
+float qcom_dsp_prof_get_hvx_utilization(const struct sysmon_query_prof_data *data);
+
+/**
+ * @brief Return the average HMX utilisation as a percentage.
+ * @param data  Profiling snapshot from qcom_dsp_get_prof_data(). May be NULL.
+ * @return Utilisation in % [0.0, 100.0], or 0.0 if @p data is NULL.
+ */
+float qcom_dsp_prof_get_hmx_utilization(const struct sysmon_query_prof_data *data);
+
+/**
+ * @brief Return the Hexagon processor architecture version.
+ *
+ * The version is read from the kernel via FASTRPC_IOCTL_GET_DSP_INFO at
+ * qcom_dsp_open() time and cached in the context.  Typical values are 73
+ * (v73) or 75 (v75).
+ *
+ * @param ctx  Context obtained from qcom_dsp_open(). May be NULL.
+ * @return Architecture version number, or 0 if unavailable or @p ctx is NULL.
+ */
 unsigned int qcom_dsp_prof_get_q6_arch_version(struct qcom_dsp_ctx *ctx);
 
+/**
+ * @brief Close a DSP session and release all associated resources.
+ *
+ * Deinitialises the sysmon query interface, frees shared memory, and
+ * closes the FastRPC handle.  Safe to call with NULL.
+ *
+ * @param ctx  Context obtained from qcom_dsp_open(), or NULL.
+ */
 void qcom_dsp_close(struct qcom_dsp_ctx *ctx);
 
 #endif /* QCOM_DSP_H_ */

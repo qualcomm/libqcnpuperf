@@ -31,34 +31,50 @@
 #define QCOM_DSP_TYPES_H_
 
 /*
- * Minimal types shared between qcom_dsp.h and translation units that use
+ * Minimal types shared between qcom_dsp.h and translation units that need
  * the kernel UAPI directly (e.g. qcom_dsp_arch.c).  Kept separate so that
- * code needing <misc/fastrpc.h> can include this header without pulling in
- * remote.h, which redefines enum fastrpc_map_flags and conflicts with the
- * kernel header.
+ * code including <misc/fastrpc.h> can use this header without also pulling
+ * in remote.h, which redefines enum fastrpc_map_flags and causes a conflict.
+ */
+
+/**
+ * @brief DSP domain identifiers.
  *
- * Values match ADSP_DOMAIN_ID / CDSP_DOMAIN_ID from remote.h.
+ * Values match ADSP_DOMAIN_ID / CDSP_DOMAIN_ID in remote.h.
  */
 enum DspDomainId {
-    DSP_ADSP = 0,
-    DSP_NPU0 = 3,
+    DSP_ADSP = 0, /**< Audio DSP (ADSP) */
+    DSP_NPU0 = 3, /**< Compute DSP / NPU (CDSP) */
 };
 
-/* Opaque session context returned by qcom_dsp_open(). */
+/**
+ * @brief Opaque session context.
+ *
+ * Allocated by qcom_dsp_open() and released by qcom_dsp_close().
+ * Callers must not access members directly.
+ */
 struct qcom_dsp_ctx;
 
-/* Forward declaration so qcom_dsp_priv.h can hold a pointer without
- * pulling in qcom_dsp.h (which pulls in remote.h). */
+/**
+ * @brief Opaque profiling data snapshot.
+ *
+ * Returned by qcom_dsp_get_prof_data().  Individual fields are accessed
+ * through the qcom_dsp_prof_get_*() accessor functions.
+ * Callers must not access members directly or free the pointer.
+ */
 struct sysmon_query_prof_data;
 
+/**
+ * @brief Return codes for internal DSP library operations.
+ */
 enum DspReturnCode {
-    RETURN_CODE_DSP_LIB_SUCCESS = 0,
-    RETURN_CODE_DSP_LIB_FAIL = 1,
-    RETURN_CODE_DSP_SYSMON_QUERY_OPEN_FAILED,
-    RETURN_CODE_DSP_SYSMON_QUERY_INIT_FAILED,
-    RETURN_CODE_DSP_SYSMON_QUERY_RPC_MEM_ALLOC_FAILED,
-    RETURN_CODE_DSP_SYSMON_QUERY_GET_PROF_DATA_FAILED,
-    RETURN_CODE_DSP_SYSMON_QUERY_DEINIT_FAILED,
+    RETURN_CODE_DSP_LIB_SUCCESS = 0,              /**< Operation succeeded */
+    RETURN_CODE_DSP_LIB_FAIL = 1,                 /**< Generic failure */
+    RETURN_CODE_DSP_SYSMON_QUERY_OPEN_FAILED,     /**< FastRPC handle open failed */
+    RETURN_CODE_DSP_SYSMON_QUERY_INIT_FAILED,     /**< Sysmon query init failed */
+    RETURN_CODE_DSP_SYSMON_QUERY_RPC_MEM_ALLOC_FAILED, /**< Shared memory allocation failed */
+    RETURN_CODE_DSP_SYSMON_QUERY_GET_PROF_DATA_FAILED,  /**< Profiling data query failed */
+    RETURN_CODE_DSP_SYSMON_QUERY_DEINIT_FAILED,   /**< Sysmon query deinit failed */
 };
 
 #endif /* QCOM_DSP_TYPES_H_ */
