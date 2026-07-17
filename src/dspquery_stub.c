@@ -172,7 +172,8 @@ static __inline void _qaic_memmove(void* dst, void* src, int size) {
 #define _ASSERT(nErr, ff) _TRY(nErr, 0 == (ff) ? AEE_EBADPARM : AEE_SUCCESS)
 
 #ifdef __QAIC_DEBUG__
-#define _ALLOCATE(nErr, pal, size, alignment, pv) _TRY(nErr, _allocator_alloc(pal, __FILE_LINE__, size, alignment, (void**)&pv))
+#define _ALLOCATE(nErr, pal, size, alignment, pv) \
+   _TRY(nErr, _allocator_alloc(pal, __FILE_LINE__, size, alignment, (void**)&pv))
 #else
 #define _ALLOCATE(nErr, pal, size, alignment, pv) _TRY(nErr, _allocator_alloc(pal, 0, size, alignment, (void**)&pv))
 #endif
@@ -451,16 +452,44 @@ struct Interface {
 
 static const Type types[1];
 static const Type types[1] = {{0x1,{{(const uintptr_t)0,(const uintptr_t)0}}, 2,0x1}};
-static const Parameter parameters[6] = {{SLIM_IFPTR32(0x8,0x10),{{(const uintptr_t)0x0,0}}, 4,SLIM_IFPTR32(0x4,0x8),0,0},{SLIM_IFPTR32(0x4,0x8),{{(const uintptr_t)0xdeadc0de,(const uintptr_t)0}}, 0,SLIM_IFPTR32(0x4,0x8),3,0},{SLIM_IFPTR32(0x4,0x8),{{(const uintptr_t)0xdeadc0de,(const uintptr_t)0}}, 0,SLIM_IFPTR32(0x4,0x8),0,0},{0x4,{{(const uintptr_t)0,(const uintptr_t)0}}, 2,0x4,0,0},{SLIM_IFPTR32(0x8,0x10),{{(const uintptr_t)&(types[0]),(const uintptr_t)0x0}}, 9,SLIM_IFPTR32(0x4,0x8),3,0},{0x4,{{(const uintptr_t)0,(const uintptr_t)1}}, 2,0x4,3,0}};
-static const Parameter* const parameterArrays[6] = {(&(parameters[4])),(&(parameters[5])),(&(parameters[3])),(&(parameters[0])),(&(parameters[1])),(&(parameters[2]))};
-static const Method methods[4] = {{REMOTE_SCALARS_MAKEX(0,0,0x2,0x0,0x0,0x1),0x4,0x0,2,2,(&(parameterArrays[3])),0x4,0x1},{REMOTE_SCALARS_MAKEX(0,0,0x0,0x0,0x1,0x0),0x0,0x0,1,1,(&(parameterArrays[5])),0x1,0x0},{REMOTE_SCALARS_MAKEX(0,0,0x1,0x0,0x0,0x0),0x4,0x0,1,1,(&(parameterArrays[2])),0x4,0x0},{REMOTE_SCALARS_MAKEX(0,0,0x1,0x2,0x0,0x0),0x8,0x4,5,3,(&(parameterArrays[0])),0x4,0x4}};
-static const Method* const methodArrays[5] = {&(methods[0]),&(methods[1]),&(methods[2]),&(methods[3]),&(methods[2])};
+static const Parameter parameters[6] = {
+   {SLIM_IFPTR32(0x8,0x10),{{(const uintptr_t)0x0,0}}, 4,SLIM_IFPTR32(0x4,0x8),0,0},
+   {SLIM_IFPTR32(0x4,0x8),{{(const uintptr_t)0xdeadc0de,(const uintptr_t)0}}, 0,SLIM_IFPTR32(0x4,0x8),3,0},
+   {SLIM_IFPTR32(0x4,0x8),{{(const uintptr_t)0xdeadc0de,(const uintptr_t)0}}, 0,SLIM_IFPTR32(0x4,0x8),0,0},
+   {0x4,{{(const uintptr_t)0,(const uintptr_t)0}}, 2,0x4,0,0},
+   {SLIM_IFPTR32(0x8,0x10),{{(const uintptr_t)&(types[0]),(const uintptr_t)0x0}}, 9,SLIM_IFPTR32(0x4,0x8),3,0},
+   {0x4,{{(const uintptr_t)0,(const uintptr_t)1}}, 2,0x4,3,0}
+};
+static const Parameter* const parameterArrays[6] = {
+   (&(parameters[4])),
+   (&(parameters[5])),
+   (&(parameters[3])),
+   (&(parameters[0])),
+   (&(parameters[1])),
+   (&(parameters[2]))
+};
+static const Method methods[4] = {
+   {REMOTE_SCALARS_MAKEX(0,0,0x2,0x0,0x0,0x1),0x4,0x0,2,2,(&(parameterArrays[3])),0x4,0x1},
+   {REMOTE_SCALARS_MAKEX(0,0,0x0,0x0,0x1,0x0),0x0,0x0,1,1,(&(parameterArrays[5])),0x1,0x0},
+   {REMOTE_SCALARS_MAKEX(0,0,0x1,0x0,0x0,0x0),0x4,0x0,1,1,(&(parameterArrays[2])),0x4,0x0},
+   {REMOTE_SCALARS_MAKEX(0,0,0x1,0x2,0x0,0x0),0x8,0x4,5,3,(&(parameterArrays[0])),0x4,0x4}
+};
+static const Method* const methodArrays[5] = {
+   &(methods[0]),
+   &(methods[1]),
+   &(methods[2]),
+   &(methods[3]),
+   &(methods[2])
+};
 static const char strings[70] = "profdata_ptr\0get_profdata\0no_metrics\0npu_flag\0deinit\0close\0open\0uri\0h\0";
 static const uint16_t methodStrings[13] = {13,0,26,37,59,64,68,46,37,48,37,53,68};
 static const uint16_t methodStringsArrays[5] = {4,11,9,0,7};
-__QAIC_SLIM_EXPORT const Interface __QAIC_SLIM(sysmonquery_slim) = {5,&(methodArrays[0]),0,0,&(methodStringsArrays [0]),methodStrings,strings};
+__QAIC_SLIM_EXPORT const Interface __QAIC_SLIM(sysmonquery_slim) = {
+   5,&(methodArrays[0]),0,0,&(methodStringsArrays [0]),methodStrings,strings
+};
 #endif //_SYSMONQUERY_SLIM_H
-__QAIC_STUB_EXPORT int __QAIC_STUB(sysmonquery_skel_handle_invoke)(remote_handle64 _h, uint32_t _sc, remote_arg* _pra) __QAIC_STUB_ATTRIBUTE {
+__QAIC_STUB_EXPORT int __QAIC_STUB(sysmonquery_skel_handle_invoke)(
+   remote_handle64 _h, uint32_t _sc, remote_arg* _pra) __QAIC_STUB_ATTRIBUTE {
    return __QAIC_REMOTE(remote_handle64_invoke)(_h, _sc, _pra);
 }
 #ifdef __cplusplus
@@ -484,11 +513,17 @@ static __inline int _stub_method(remote_handle64 _handle, uint32_t _mid, uint32_
    _CATCH(_nErr) {}
    return _nErr;
 }
-__QAIC_STUB_EXPORT int __QAIC_STUB(sysmonquery_init)(remote_handle64 _handle, unsigned int npu_flag) __QAIC_STUB_ATTRIBUTE {
+__QAIC_STUB_EXPORT int __QAIC_STUB(sysmonquery_init)(
+   remote_handle64 _handle, unsigned int npu_flag) __QAIC_STUB_ATTRIBUTE {
    uint32_t _mid = 2;
    return _stub_method(_handle, _mid, (uint32_t*)&npu_flag);
 }
-static __inline int _stub_method_1(remote_handle64 _handle, uint32_t _mid, char* _rout0[1], uint32_t _rout0Len[1], uint32_t _rout1[1], uint32_t _in2[1]) {
+static __inline int _stub_method_1(remote_handle64 _handle,
+                                   uint32_t _mid,
+                                   char* _rout0[1],
+                                   uint32_t _rout0Len[1],
+                                   uint32_t _rout1[1],
+                                   uint32_t _in2[1]) {
    int _numIn[1];
    remote_arg _pra[3];
    uint32_t _primIn[2];
@@ -512,11 +547,21 @@ static __inline int _stub_method_1(remote_handle64 _handle, uint32_t _mid, char*
    _CATCH(_nErr) {}
    return _nErr;
 }
-__QAIC_STUB_EXPORT int __QAIC_STUB(sysmonquery_get_profdata)(remote_handle64 _handle, unsigned char* profdata_ptr, int profdata_ptrLen, int* no_metrics, unsigned int npu_flag) __QAIC_STUB_ATTRIBUTE {
+__QAIC_STUB_EXPORT int __QAIC_STUB(sysmonquery_get_profdata)(
+   remote_handle64 _handle,
+   unsigned char* profdata_ptr,
+   int profdata_ptrLen,
+   int* no_metrics,
+   unsigned int npu_flag) __QAIC_STUB_ATTRIBUTE {
    uint32_t _mid = 3;
-   return _stub_method_1(_handle, _mid, (char**)&profdata_ptr, (uint32_t*)&profdata_ptrLen, (uint32_t*)no_metrics, (uint32_t*)&npu_flag);
+   return _stub_method_1(_handle, _mid,
+                         (char**)&profdata_ptr,
+                         (uint32_t*)&profdata_ptrLen,
+                         (uint32_t*)no_metrics,
+                         (uint32_t*)&npu_flag);
 }
-__QAIC_STUB_EXPORT int __QAIC_STUB(sysmonquery_deinit)(remote_handle64 _handle, unsigned int npu_flag) __QAIC_STUB_ATTRIBUTE {
+__QAIC_STUB_EXPORT int __QAIC_STUB(sysmonquery_deinit)(
+   remote_handle64 _handle, unsigned int npu_flag) __QAIC_STUB_ATTRIBUTE {
    uint32_t _mid = 4;
    return _stub_method(_handle, _mid, (uint32_t*)&npu_flag);
 }

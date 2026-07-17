@@ -78,6 +78,20 @@ target_compile_options(qcnpuperf PRIVATE
 )
 
 # ------------------------------------------------------------
+# ABI: restrict exported symbols to the documented public API
+# ------------------------------------------------------------
+
+set(QCNPUPERF_VERSION_SCRIPT ${CMAKE_CURRENT_SOURCE_DIR}/src/qcnpuperf.map)
+
+target_link_options(qcnpuperf PRIVATE
+    -Wl,--version-script=${QCNPUPERF_VERSION_SCRIPT}
+)
+
+set_target_properties(qcnpuperf PROPERTIES
+    LINK_DEPENDS ${QCNPUPERF_VERSION_SCRIPT}
+)
+
+# ------------------------------------------------------------
 # Optional sample app (ncurses)
 # ------------------------------------------------------------
 if(QCNPU_PERF_BUILD_CLI)

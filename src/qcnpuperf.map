@@ -1,0 +1,13 @@
+LIBQCNPUPERF_1.0 {
+    global:
+        qcom_dsp_open;
+        qcom_dsp_close;
+        qcom_dsp_get_prof_data;
+        qcom_dsp_prof_get_q6_utilization;
+        qcom_dsp_prof_get_q6_clock;
+        qcom_dsp_prof_get_hvx_utilization;
+        qcom_dsp_prof_get_hmx_utilization;
+        qcom_dsp_prof_get_q6_arch_version;
+    local:
+        *;
+};
