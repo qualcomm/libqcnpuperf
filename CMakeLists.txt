@@ -51,7 +51,7 @@ configure_file(
 target_include_directories(qcnpuperf
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/inc>
-        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/qcnpuperf>
         ${FASTRPC_INCLUDE_DIR}
 )
 
@@ -134,5 +134,5 @@ install(FILES
 install(FILES
     inc/qcom_dsp.h
     inc/qcom_dsp_types.h
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/qcnpuperf
 )
