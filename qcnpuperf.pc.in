@@ -1,11 +1,11 @@
 prefix=@CMAKE_INSTALL_PREFIX@
 exec_prefix=${prefix}
-libdir=@CMAKE_INSTALL_LIBDIR@
-includedir=@CMAKE_INSTALL_INCLUDEDIR@
+libdir=@CMAKE_INSTALL_FULL_LIBDIR@
+includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
 
 Name: qcnpuperf
 Description: Qualcomm NPU Metrics helper library
 Version: @PROJECT_VERSION@
 Requires:
 Libs: -L${libdir} -lqcnpuperf -lcdsprpc
-Cflags: -I${includedir}
+Cflags: -I${includedir}/qcnpuperf
