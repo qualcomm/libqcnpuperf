@@ -60,6 +60,8 @@ struct sysmon_query_prof_data {
 struct qcom_dsp_ctx {
     enum DspDomainId              domain_id;
     uint64_t                      h;         /* remote_handle64 */
+    uint64_t                      attach_h;  /* remote_handle64 */
+    int                           attach_h_valid;
     struct sysmon_query_prof_data *prof_data;
     unsigned int                  arch_ver;  /* cached; 0 = not yet queried */
 };

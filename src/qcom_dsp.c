@@ -42,21 +42,36 @@
 #include <stdlib.h>
 #include <string.h>
 
-static void get_full_uri_info(const char *uri, char *full_uri, int size,
+static void get_full_uri_info(struct qcom_dsp_ctx *ctx, const char *uri,
+                              char *full_uri, int size,
                               enum DspDomainId domain_id)
 {
     memset(full_uri, 0, (size_t)size);
     strlcpy(full_uri, uri, (size_t)size);
     remote_handle64 fd;
+    int ret = -1;
 
     if (domain_id == DSP_ADSP) {
         strlcat(full_uri, ADSP_DOMAIN, (size_t)size);
-        remote_handle64_open(ITRANSPORT_PREFIX "attachuserpd&_dom=adsp", &fd);
+        ret = remote_handle64_open(ITRANSPORT_PREFIX "attachuserpd&_dom=adsp", &fd);
     } else if (domain_id == DSP_NPU0) {
         strlcat(full_uri, CDSP_DOMAIN, (size_t)size);
-        remote_handle64_open(ITRANSPORT_PREFIX "attachuserpd&_dom=cdsp", &fd);
+        ret = remote_handle64_open(ITRANSPORT_PREFIX "attachuserpd&_dom=cdsp", &fd);
     } else {
         memset(full_uri, 0, (size_t)size);
+    }
+
+    if (ret == 0) {
+        ctx->attach_h = fd;
+        ctx->attach_h_valid = 1;
+    }
+}
+
+static void close_attach_handle(struct qcom_dsp_ctx *ctx)
+{
+    if (ctx->attach_h_valid) {
+        remote_handle64_close((remote_handle64)ctx->attach_h);
+        ctx->attach_h_valid = 0;
     }
 }
 
@@ -71,7 +86,7 @@ struct qcom_dsp_ctx *qcom_dsp_open(enum DspDomainId domain_id)
 
     ctx->domain_id = domain_id;
 
-    get_full_uri_info(sysmonquery_URI, full_uri, sizeof(full_uri), domain_id);
+    get_full_uri_info(ctx, sysmonquery_URI, full_uri, sizeof(full_uri), domain_id);
     if (sysmonquery_open(full_uri, &h) != 0)
         goto err_free;
     ctx->h = h;
@@ -94,6 +109,7 @@ err_deinit:
 err_close:
     sysmonquery_close(h);
 err_free:
+    close_attach_handle(ctx);
     free(ctx);
     return NULL;
 }
@@ -149,5 +165,6 @@ void qcom_dsp_close(struct qcom_dsp_ctx *ctx)
     if (ctx->h)
         sysmonquery_close((remote_handle64)ctx->h);
 
+    close_attach_handle(ctx);
     free(ctx);
 }
