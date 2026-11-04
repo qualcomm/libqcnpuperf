@@ -7,5 +7,6 @@ Name: qcnpuperf
 Description: Qualcomm NPU Metrics helper library
 Version: @PROJECT_VERSION@
 Requires:
-Libs: -L${libdir} -lqcnpuperf -lcdsprpc
+Libs: -L${libdir} -lqcnpuperf
+Libs.private: -lcdsprpc
 Cflags: -I${includedir}/qcnpuperf
