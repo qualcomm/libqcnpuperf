@@ -38,9 +38,47 @@
 #include "dspquery_stub.h"
 #include "remote.h"
 #include "rpcmem.h"
+#include "AEEStdErr.h"
 
+#include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+
+/*
+ * Map a FastRPC/AEE error code to the closest errno value.  Errors reported
+ * by the DSP itself are offset by DSP_AEE_EOFFSET.
+ */
+static int aee_to_errno(int err)
+{
+    if (err > (int)DSP_AEE_EOFFSET && err <= (int)DSP_AEE_EOFFSET + 1024)
+        err -= (int)DSP_AEE_EOFFSET;
+
+    switch (err) {
+    case AEE_ENOMEMORY:
+        return ENOMEM;
+    case AEE_EBADPARM:
+    case AEE_EINVARGS:
+        return EINVAL;
+    case AEE_ECONNREFUSED:
+        return ECONNREFUSED;
+    case AEE_ENOTALLOWED:
+        return EPERM;
+    case AEE_EUNSUPPORTED:
+    case AEE_EUNSUPPORTEDAPI:
+        return ENOTSUP;
+    case AEE_ENOSUCHDEVICE:
+        return ENODEV;
+    case AEE_ENOSUCH:
+    case AEE_ENOSUCHFILE:
+    case AEE_ENOSUCHMOD:
+    case AEE_EUNABLETOLOAD:
+        return ENOENT;
+    case AEE_EINTERRUPTED:
+        return EINTR;
+    default:
+        return EIO;
+    }
+}
 
 static void get_full_uri_info(const char *uri, char *full_uri, int size,
                               enum DspDomainId domain_id)
@@ -64,6 +102,7 @@ struct qcom_dsp_ctx *qcom_dsp_open(enum DspDomainId domain_id)
 {
     char full_uri[256] = {0};
     remote_handle64 h;
+    int ret, err;
 
     struct qcom_dsp_ctx *ctx = calloc(1, sizeof(*ctx));
     if (!ctx)
@@ -72,18 +111,26 @@ struct qcom_dsp_ctx *qcom_dsp_open(enum DspDomainId domain_id)
     ctx->domain_id = domain_id;
 
     get_full_uri_info(sysmonquery_URI, full_uri, sizeof(full_uri), domain_id);
-    if (sysmonquery_open(full_uri, &h) != 0)
+    ret = sysmonquery_open(full_uri, &h);
+    if (ret != 0) {
+        err = aee_to_errno(ret);
         goto err_free;
+    }
     ctx->h = h;
 
-    if (sysmonquery_init(h, 0) != 0)
+    ret = sysmonquery_init(h, 0);
+    if (ret != 0) {
+        err = aee_to_errno(ret);
         goto err_close;
+    }
 
     ctx->prof_data = rpcmem_alloc(RPCMEM_DEFAULT_HEAP,
                                   RPCMEM_DEFAULT_FLAGS | RPCMEM_HEAP_NONCOHERENT,
                                   sizeof(struct sysmon_query_prof_data));
-    if (!ctx->prof_data)
+    if (!ctx->prof_data) {
+        err = ENOMEM;
         goto err_deinit;
+    }
 
     qcom_dsp_set_arch_version(ctx);
     memset(ctx->prof_data, 0, sizeof(struct sysmon_query_prof_data));
@@ -95,20 +142,27 @@ err_close:
     sysmonquery_close(h);
 err_free:
     free(ctx);
+    errno = err;
     return NULL;
 }
 
 struct sysmon_query_prof_data *qcom_dsp_get_prof_data(struct qcom_dsp_ctx *ctx,
                                                       int *no_metrics)
 {
-    if (!ctx || !no_metrics)
+    if (!ctx || !no_metrics) {
+        errno = EINVAL;
         return NULL;
+    }
 
     int ret = sysmonquery_get_profdata((remote_handle64)ctx->h,
                                        (unsigned char *)ctx->prof_data,
                                        sizeof(struct sysmon_query_prof_data),
                                        no_metrics, 0);
-    return ret == 0 ? ctx->prof_data : NULL;
+    if (ret != 0) {
+        errno = aee_to_errno(ret);
+        return NULL;
+    }
+    return ctx->prof_data;
 }
 
 unsigned int qcom_dsp_prof_get_q6_arch_version(struct qcom_dsp_ctx *ctx)
