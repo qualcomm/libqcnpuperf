@@ -59,11 +59,6 @@ target_include_directories(qcnpuperf
 # Link libraries
 # ------------------------------------------------------------
 
-target_link_directories(qcnpuperf
-    PRIVATE
-        /usr/local/lib
-)
-
 target_link_libraries(qcnpuperf
     PRIVATE
         ${FASTRPC_LIBRARY}
