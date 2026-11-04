@@ -69,8 +69,17 @@ enum DspReturnCode qcom_dsp_set_arch_version(struct qcom_dsp_ctx *ctx)
 
     enum DspReturnCode ret = RETURN_CODE_DSP_LIB_FAIL;
     if (ioctl(fd, FASTRPC_IOCTL_GET_DSP_INFO, &cap) == 0) {
-        ctx->arch_ver = cap.capability & 0xFF;
-        ret = RETURN_CODE_DSP_LIB_SUCCESS;
+        /*
+         * The low byte holds the version as two hex digits, e.g. 0x73 for
+         * v73; libcdsprpc formats it with "v%02x".
+         */
+        unsigned int hi = (cap.capability >> 4) & 0xF;
+        unsigned int lo = cap.capability & 0xF;
+
+        if (hi <= 9 && lo <= 9) {
+            ctx->arch_ver = hi * 10 + lo;
+            ret = RETURN_CODE_DSP_LIB_SUCCESS;
+        }
     }
 
     close(fd);
