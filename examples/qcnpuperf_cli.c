@@ -28,7 +28,9 @@
 */
 
 #include "qcom_dsp.h"
+#include <errno.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <ncurses.h>
 
@@ -47,24 +49,40 @@ int main(int argc, char *argv[])
 	struct sysmon_query_prof_data *data;
 	struct qcom_dsp_ctx *ctx;
 	int no_metrics = 0;
+	int err;
+
+	/*
+	 * Open the DSP before initializing curses so that errors are printed
+	 * to the regular screen rather than to the curses screen, which goes
+	 * away on endwin().
+	 */
+	ctx = qcom_dsp_open(DSP_NPU0);
+	if (!ctx) {
+		err = errno;
+		fprintf(stderr, "qcnpuperf_cli: failed to open %s: %s\n",
+			domain_to_str(DSP_NPU0), strerror(err));
+		if (err == ECONNREFUSED)
+			fprintf(stderr, "qcnpuperf_cli: the DSP refused the session; "
+				"this usually means the process isn't privileged "
+				"enough to use it (e.g. not running as root)\n");
+		return EXIT_FAILURE;
+	}
 
 	initscr();
 	noecho();
 	curs_set(FALSE);
 
-	ctx = qcom_dsp_open(DSP_NPU0);
-	if (!ctx) {
-		fprintf(stderr, "qcom_dsp_open failed\n");
-		endwin();
-		return EXIT_FAILURE;
-	}
-
 	while (true) {
 		data = qcom_dsp_get_prof_data(ctx, &no_metrics);
 		if (!data || no_metrics <= 0) {
-			fprintf(stderr, "qcom_dsp_get_prof_data failed\n");
+			err = errno;
 			qcom_dsp_close(ctx);
 			endwin();
+			if (data)
+				fprintf(stderr, "qcnpuperf_cli: no profiling data returned\n");
+			else
+				fprintf(stderr, "qcnpuperf_cli: failed to get profiling data: %s\n",
+					strerror(err));
 			return EXIT_FAILURE;
 		}
 
