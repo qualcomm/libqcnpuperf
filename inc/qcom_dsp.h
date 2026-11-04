@@ -62,8 +62,10 @@
  * The Hexagon architecture version is queried and cached at this point.
  *
  * @param domain_id  DSP domain to connect to (e.g. DSP_NPU0 for CDSP).
- * @return Opaque context pointer on success, NULL on failure.
- *         Must be released with qcom_dsp_close().
+ * @return Opaque context pointer on success, NULL on failure with errno
+ *         set to indicate the error (e.g. ECONNREFUSED if the DSP refused
+ *         the session, typically when the process lacks the privileges to
+ *         use the requested DSP).  Must be released with qcom_dsp_close().
  */
 struct qcom_dsp_ctx *qcom_dsp_open(enum DspDomainId domain_id);
 
@@ -76,8 +78,8 @@ struct qcom_dsp_ctx *qcom_dsp_open(enum DspDomainId domain_id);
  *
  * @param ctx         Context obtained from qcom_dsp_open().
  * @param no_metrics  Set to the number of valid metric slots on success.
- * @return Pointer to the profiling data on success, NULL on failure.
- *         Do not free the returned pointer.
+ * @return Pointer to the profiling data on success, NULL on failure with
+ *         errno set to indicate the error.  Do not free the returned pointer.
  */
 struct sysmon_query_prof_data *qcom_dsp_get_prof_data(struct qcom_dsp_ctx *ctx, int *no_metrics);
 
