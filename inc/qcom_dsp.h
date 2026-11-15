@@ -114,7 +114,7 @@ float qcom_dsp_prof_get_hmx_utilization(const struct sysmon_query_prof_data *dat
  *
  * The version is read from the kernel via FASTRPC_IOCTL_GET_DSP_INFO at
  * qcom_dsp_open() time and cached in the context.  Typical values are 73
- * (v73) or 75 (v75).
+ * (v73), 75 (v75) or 81 (v81).
  *
  * @param ctx  Context obtained from qcom_dsp_open(). May be NULL.
  * @return Architecture version number, or 0 if unavailable or @p ctx is NULL.
