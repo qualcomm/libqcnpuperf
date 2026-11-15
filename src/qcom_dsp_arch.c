@@ -59,7 +59,7 @@ enum DspReturnCode qcom_dsp_set_arch_version(struct qcom_dsp_ctx *ctx)
     default:       return RETURN_CODE_DSP_LIB_FAIL;
     }
 
-    int fd = open(dev, O_RDWR);
+    int fd = open(dev, O_RDONLY);
     if (fd < 0)
         return RETURN_CODE_DSP_LIB_FAIL;
 
